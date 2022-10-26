@@ -1,0 +1,143 @@
+var fft;
+let bass, lowMid, mid, highMid, treble;
+var glitch;
+var myFont;
+let img, img2, img3;
+var smalltown;
+var rave;
+
+function preload() {
+  //loading images and initialising p5.glitch library and class
+  sound = loadSound("work sample.mp3");
+  myFont = loadFont("VT323-Regular.ttf");
+  img = loadImage("Smiley.svg.png", function (im) {
+    glitch.loadImage(im);
+  });
+  img2 = loadImage("smalltown.png");
+  img3 = loadImage("rave.png");
+  
+  glitch = new Glitch();
+  smalltown = new Smalltown();
+}
+
+function setup() {
+  let cnv = createCanvas(899, 899);
+  userStartAudio();
+  sound.loop();
+  sound.setVolume(0.4);
+  pixelDensity(1);
+  img2.filter(DILATE);
+  fill(0);
+  noStroke();
+  //initiate p5's fast fourier transform algorithm, divide the frequency spectrum into 32 individual bands
+  fft = new p5.FFT(0, 32);
+  textAlign(CENTER);
+  imageMode(CENTER);
+  //frameRate(10);
+}
+
+function draw() {
+  background(0,255, 222);
+  tint(mouseX, 222, mouseY);
+  imageMode(CENTER);
+  GridDance();
+  drawSmiley();
+  GridDance();
+  
+  
+  imageMode(CORNER);
+  smalltown.show();
+  
+  textSize(38);
+  fill(255);
+  text('NOV_19   12PM  PORT_MELBOURNE   RAVE', 400, 400);
+  text('NOV_19   12PM  PORT_MELBOURNE   RAVE', 400, 450);
+  text('NOV_19   12PM  PORT_MELBOURNE   RAVE', 400, 500);
+  text('NOV_19   12PM  PORT_MELBOURNE   RAVE', 400, 550);
+  text('NOV_19   12PM  PORT_MELBOURNE   RAVE', 400, 600);
+  text('NOV_19   12PM  PORT_MELBOURNE   RAVE', 400, 650);
+  text('NOV_19   12PM  PORT_MELBOURNE   RAVE', 400, 700);
+  text('NOV_19   12PM  PORT_MELBOURNE   RAVE', 400, 750);
+  
+}
+
+class Smalltown {
+  constructor(_x, _y) {
+    this.wave = map(tan(radians(frameCount + this.x + this.y)),-1,1,-1,100);
+    this.x = _x + this.wave;
+    this.y = _y;
+  }
+  show(){
+    image(img2, 0, 0, this.x, 133);
+    image(img3, 0, 133, 899, 133);
+  }
+  
+}
+
+function drawSmiley() {
+  //drawing tool with two preloaded instances of smiley image, one is glitched one is normal
+  
+  glitch.loadType("png");
+  glitch.loadQuality(0.6);
+  glitch.randomBytes(6);
+  glitch.replaceBytes(10, 33);
+  glitch.replaceHex("ffdb00438001", "ffdb00430fff");
+  glitch.buildImage();
+
+  tint(225, 100, 23, 3);
+  blendMode(EXCLUSION);
+  image(glitch.image, mouseX, mouseY, glitch.width / 6, glitch.height / 2);
+  image(img, mouseX, mouseY, 200,200);
+}
+
+function GridDance() {
+  var spectrum = fft.analyze();
+  //get amplitude of bass frequency range
+  bass = fft.getEnergy("bass");
+ 
+  var r = 255 - (bass - 1)
+  
+  var tilesX = 3;
+  //add bass amp data to the number of vertical tiles
+  var tilesY = r-100;
+  var tileW = width / tilesX;
+  var tileH = width / tilesY;
+
+  fill(0);
+  noStroke();
+  rectMode(CORNER);
+  ellipseMode(CORNER);
+
+  //Initiate a nested loop that counts across the x and y axis. Both axis are divided by the number of tiles horizontally and vertically. For each tile, there are 4 unique visual displays. These change for every frame.
+  for (let x = 0; x < tilesX; x++) {
+    for (let y = 0; y < tilesY; y++) {
+      let selector = int(random(4));
+
+      if (selector == 1) {
+        push();
+        blendMode(ADD);
+        translate(x * tileW, y * tileH);
+        fill(255, 255, 0);
+        textSize(random((22, 28)));
+        text("DANCE", tileW + 10, tileH + 10);
+        pop();
+      } else if (selector == 2) {
+        push();
+        blendMode(ADD);
+        translate(x * tileW, y * tileH);
+        fill(255, 0, 255);
+        textSize(random((22, 28)));
+        text("MOVE", tileW + 10, tileH + 10);
+        pop();
+      } else if (selector == 3) {
+        push();
+        blendMode(ADD);
+        translate(x * tileW, y * tileH);
+        fill(0, 255, 255);
+        textSize(random((22, 28)));
+        text("RAVE", tileW - 10, tileH - 10);
+        pop();
+      }
+    }
+  }
+}
